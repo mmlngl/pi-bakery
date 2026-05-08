@@ -1,0 +1,30 @@
+{
+	"name": "@mmlngl/pi-usage",
+	"version": "0.1.0",
+	"description": "UI tweaks for pi coding agent",
+	"keywords": [
+		"pi-package"
+	],
+	"type": "module",
+	"license": "MIT",
+	"scripts": {
+		"typecheck": "tsc --noEmit"
+	},
+	"pi": {
+		"extensions": [
+			"./extensions"
+		]
+	},
+	"peerDependencies": {
+		"@earendil-works/pi-coding-agent": "*",
+		"@earendil-works/pi-tui": "*",
+		"typebox": "*"
+	},
+	"devDependencies": {
+		"@earendil-works/pi-coding-agent": "^0.74.0",
+		"@earendil-works/pi-tui": "^0.74.0",
+		"@types/node": "^22.0.0",
+		"typebox": "^1.1.38",
+		"typescript": "^5.8.3"
+	}
+}

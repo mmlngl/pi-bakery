@@ -68,11 +68,15 @@
 		"enable": true,
 		"custom_scope": false,
 		"max_items": 20,
-		"initial_value": "ui-tweaks",
+		"initial_value": "usage",
 		"options": [
 			{
 				"value": "ui-tweaks",
 				"label": "ui-tweaks"
+			},
+			{
+				"value": "usage",
+				"label": "usage"
 			},
 			{
 				"value": "shared",
