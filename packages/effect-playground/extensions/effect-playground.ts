@@ -2,10 +2,10 @@ import type {
 	ExtensionAPI,
 	ExtensionCommandContext,
 } from "@earendil-works/pi-coding-agent";
-import * as Cli from "effect/unstable/cli";
 import * as N from "@effect/platform-node";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Cli from "effect/unstable/cli";
 import * as Ctx from "./ctx.js";
 
 const name = Cli.Argument.string("name").pipe(

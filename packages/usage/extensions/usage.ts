@@ -4,7 +4,7 @@ import type {
 	ExtensionContext,
 	SessionShutdownEvent,
 } from "@earendil-works/pi-coding-agent";
-import { getUsageViewPrefsDefaults, loadUsageViewPrefs } from "./usage-aggregation.js";
+import { loadUsageViewPrefs } from "./usage-aggregation.js";
 import { UsageDashboard } from "./usage-dashboard.js";
 import {
 	closeUsageDatabase,
@@ -26,7 +26,10 @@ export default function (pi: ExtensionAPI) {
 	pi.registerCommand("usage", {
 		description: "Open the global usage dashboard",
 		handler: async (_args, ctx: ExtensionCommandContext) => {
-			return ctx.ui.custom((_tui, _theme, _keybindings, done) => new UsageDashboard(loadUsageViewPrefs(), done));
+			return ctx.ui.custom(
+				(_tui, _theme, _keybindings, done) =>
+					new UsageDashboard(loadUsageViewPrefs(), done),
+			);
 		},
 	});
 

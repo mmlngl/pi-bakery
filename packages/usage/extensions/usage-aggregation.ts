@@ -44,7 +44,12 @@ export interface UsageBucketSession {
 }
 
 export type UsageChartStyle = "punch" | "line" | "bar";
-export type UsageBreakdownMode = "total" | "input" | "output" | "cache" | "cost";
+export type UsageBreakdownMode =
+	| "total"
+	| "input"
+	| "output"
+	| "cache"
+	| "cost";
 
 export interface UsageViewPrefs {
 	range: UsageRange;
@@ -76,7 +81,10 @@ function emptyTotals(): UsageTotals {
 	};
 }
 
-function rangeWindow(range: UsageRange, now: Date): { start: Date | null; end: Date } {
+function rangeWindow(
+	range: UsageRange,
+	now: Date,
+): { start: Date | null; end: Date } {
 	const end = new Date(now);
 	if (range === "all-time") return { start: null, end };
 
@@ -132,7 +140,8 @@ export function loadUsageViewPrefs(): UsageViewPrefs {
 			range: parsed.range ?? DEFAULT_VIEW_PREFS.range,
 			chartStyle: parsed.chartStyle ?? DEFAULT_VIEW_PREFS.chartStyle,
 			breakdown: parsed.breakdown ?? DEFAULT_VIEW_PREFS.breakdown,
-			selectedBucket: parsed.selectedBucket ?? DEFAULT_VIEW_PREFS.selectedBucket,
+			selectedBucket:
+				parsed.selectedBucket ?? DEFAULT_VIEW_PREFS.selectedBucket,
 			updatedAt: parsed.updatedAt,
 		};
 	} catch {
@@ -163,7 +172,10 @@ export function getUsageViewPrefsDefaults(): UsageViewPrefs {
 	return { ...DEFAULT_VIEW_PREFS };
 }
 
-export function getUsageOverview(range: UsageRange, now = new Date()): UsageOverview {
+export function getUsageOverview(
+	range: UsageRange,
+	now = new Date(),
+): UsageOverview {
 	const window = rangeWindow(range, now);
 	const totals = emptyTotals();
 	const dbPath = getUsageDatabasePath();
@@ -181,7 +193,9 @@ export function getUsageOverview(range: UsageRange, now = new Date()): UsageOver
 
 	const db = new DatabaseSync(dbPath, { readOnly: true });
 	try {
-		const whereClause = window.start ? "WHERE session_ended_at >= ? AND session_ended_at <= ?" : "WHERE session_ended_at <= ?";
+		const whereClause = window.start
+			? "WHERE session_ended_at >= ? AND session_ended_at <= ?"
+			: "WHERE session_ended_at <= ?";
 		const params = window.start ? [toIso(window.start), end] : [end];
 		const row = db
 			.prepare(
@@ -216,9 +230,13 @@ export function getUsageOverview(range: UsageRange, now = new Date()): UsageOver
 	}
 }
 
-export function getRollingWeekPunchBuckets(now = new Date()): UsagePunchBucket[] {
+export function getRollingWeekPunchBuckets(
+	now = new Date(),
+): UsagePunchBucket[] {
 	const dbPath = getUsageDatabasePath();
-	const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+	const today = new Date(
+		Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+	);
 	const start = new Date(today);
 	start.setUTCDate(start.getUTCDate() - 6);
 	const end = new Date(today);
@@ -230,12 +248,15 @@ export function getRollingWeekPunchBuckets(now = new Date()): UsagePunchBucket[]
 		return date;
 	});
 
-	const buckets = days.map((date) => ({
-		date: dayKey(date),
-		label: weekdayInitial(date),
-		sessionCount: 0,
-		totals: emptyTotals(),
-	} satisfies UsagePunchBucket));
+	const buckets = days.map(
+		(date) =>
+			({
+				date: dayKey(date),
+				label: weekdayInitial(date),
+				sessionCount: 0,
+				totals: emptyTotals(),
+			}) satisfies UsagePunchBucket,
+	);
 
 	if (!existsSync(dbPath)) return buckets;
 
@@ -282,7 +303,9 @@ export function getRollingWeekPunchBuckets(now = new Date()): UsagePunchBucket[]
 	}
 }
 
-export function getUsageBucketSessions(bucketDate: string): UsageBucketSession[] {
+export function getUsageBucketSessions(
+	bucketDate: string,
+): UsageBucketSession[] {
 	const dbPath = getUsageDatabasePath();
 	if (!existsSync(dbPath)) return [];
 

@@ -2,8 +2,12 @@ import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import type { ExtensionContext, SessionShutdownEvent } from "@earendil-works/pi-coding-agent";
-import type { SessionEntry } from "@earendil-works/pi-coding-agent";
+import type {
+	ExtensionContext,
+	SessionEntry,
+	SessionShutdownEvent,
+} from "@earendil-works/pi-coding-agent";
+
 interface UsageLike {
 	input: number;
 	output: number;
@@ -111,14 +115,37 @@ function toNumber(value: unknown): number {
 function formatTimestamp(value: string | undefined): string {
 	if (!value) return new Date().toISOString();
 	const parsed = new Date(value);
-	return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+	return Number.isNaN(parsed.getTime())
+		? new Date().toISOString()
+		: parsed.toISOString();
 }
 
-function extractUsage(message: { usage?: UsageLike } | undefined): UsageLike | undefined {
+function extractUsage(
+	message: { usage?: UsageLike } | undefined,
+): UsageLike | undefined {
 	return message?.usage;
 }
 
-function summarizeEntries(entries: SessionEntry[]): Pick<SessionUsageSummary, "inputTokens" | "outputTokens" | "cacheReadTokens" | "cacheWriteTokens" | "totalTokens" | "costInput" | "costOutput" | "costCacheRead" | "costCacheWrite" | "costTotal" | "userMessages" | "assistantMessages" | "toolResults" | "provider" | "modelId"> {
+function summarizeEntries(
+	entries: SessionEntry[],
+): Pick<
+	SessionUsageSummary,
+	| "inputTokens"
+	| "outputTokens"
+	| "cacheReadTokens"
+	| "cacheWriteTokens"
+	| "totalTokens"
+	| "costInput"
+	| "costOutput"
+	| "costCacheRead"
+	| "costCacheWrite"
+	| "costTotal"
+	| "userMessages"
+	| "assistantMessages"
+	| "toolResults"
+	| "provider"
+	| "modelId"
+> {
 	let inputTokens = 0;
 	let outputTokens = 0;
 	let cacheReadTokens = 0;
@@ -339,7 +366,10 @@ export function getUsageDirectory(): string {
 	return appDir;
 }
 
-export function configureUsageStorageForTests(options: { appDir: string; databasePath?: string }): void {
+export function configureUsageStorageForTests(options: {
+	appDir: string;
+	databasePath?: string;
+}): void {
 	closeUsageDatabase();
 	appDir = options.appDir;
 	databasePath = options.databasePath ?? join(appDir, "usage.sqlite3");

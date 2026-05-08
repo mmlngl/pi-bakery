@@ -36,7 +36,12 @@ export class UsageDashboard extends Container {
 	}
 
 	handleInput(data: string): void {
-		if (matchesKey(data, Key.escape) || matchesKey(data, Key.ctrl("c")) || data === "escape" || data === "ctrl+c") {
+		if (
+			matchesKey(data, Key.escape) ||
+			matchesKey(data, Key.ctrl("c")) ||
+			data === "escape" ||
+			data === "ctrl+c"
+		) {
 			if (this.detailOpen) {
 				this.detailOpen = false;
 				this.rebuild();
@@ -78,13 +83,18 @@ export class UsageDashboard extends Container {
 			data === "right" ||
 			data === "down"
 		) {
-			this.selectedIndex = Math.min(this.buckets.length - 1, this.selectedIndex + 1);
+			this.selectedIndex = Math.min(
+				this.buckets.length - 1,
+				this.selectedIndex + 1,
+			);
 			this.persistSelectedBucket();
 			this.rebuild();
 		}
 	}
 
-	private normalizeChartStyle(value: UsageChartStyle | string | undefined): UsageChartStyle {
+	private normalizeChartStyle(
+		value: UsageChartStyle | string | undefined,
+	): UsageChartStyle {
 		if (value === "line" || value === "bar") return value;
 		return "punch";
 	}
@@ -139,7 +149,6 @@ export class UsageDashboard extends Container {
 				return this.lineGlyph(totalTokens);
 			case "bar":
 				return this.barGlyph(totalTokens);
-			case "punch":
 			default:
 				return this.punchGlyph(totalTokens);
 		}
@@ -154,23 +163,26 @@ export class UsageDashboard extends Container {
 	}
 
 	private getSelectedBucket(): UsagePunchBucket {
-		return this.buckets[this.selectedIndex] ?? this.buckets[0] ?? {
-			date: "",
-			label: "?",
-			sessionCount: 0,
-			totals: {
-				inputTokens: 0,
-				outputTokens: 0,
-				cacheReadTokens: 0,
-				cacheWriteTokens: 0,
-				totalTokens: 0,
-				costInput: 0,
-				costOutput: 0,
-				costCacheRead: 0,
-				costCacheWrite: 0,
-				costTotal: 0,
-			},
-		};
+		return (
+			this.buckets[this.selectedIndex] ??
+			this.buckets[0] ?? {
+				date: "",
+				label: "?",
+				sessionCount: 0,
+				totals: {
+					inputTokens: 0,
+					outputTokens: 0,
+					cacheReadTokens: 0,
+					cacheWriteTokens: 0,
+					totalTokens: 0,
+					costInput: 0,
+					costOutput: 0,
+					costCacheRead: 0,
+					costCacheWrite: 0,
+					costTotal: 0,
+				},
+			}
+		);
 	}
 
 	private buildOverviewLines(): string[] {
@@ -199,7 +211,9 @@ export class UsageDashboard extends Container {
 			"",
 			sessions.length > 0 ? "Sessions" : "Sessions: none",
 			...sessions.map((session, index) => {
-				const providerModel = [session.provider, session.modelId].filter(Boolean).join("/") || "unknown";
+				const providerModel =
+					[session.provider, session.modelId].filter(Boolean).join("/") ||
+					"unknown";
 				return `${index + 1}. ${session.sessionName ?? session.sessionId} | ${providerModel} | ${this.formatTimeRange(session.sessionStartedAt, session.sessionEndedAt)} | total ${session.totals.totalTokens} | input ${session.totals.inputTokens} | output ${session.totals.outputTokens} | cache ${session.totals.cacheReadTokens}/${session.totals.cacheWriteTokens} | cost $${this.formatMoney(session.totals.costTotal)}`;
 			}),
 		];
@@ -211,7 +225,9 @@ export class UsageDashboard extends Container {
 		this.buckets = getRollingWeekPunchBuckets();
 		this.selectedIndex = Math.min(this.selectedIndex, this.buckets.length - 1);
 
-		const text = this.detailOpen ? this.buildDetailLines().join("\n") : this.buildOverviewLines().join("\n");
+		const text = this.detailOpen
+			? this.buildDetailLines().join("\n")
+			: this.buildOverviewLines().join("\n");
 		this.addChild(new Text(text, 1, 0));
 	}
 }
