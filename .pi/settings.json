@@ -1,5 +1,3 @@
 {
-  "packages": [
-    "./packages/ui-tweaks"
-  ]
+	"packages": ["../packages/ui-tweaks", "../packages/usage"]
 }

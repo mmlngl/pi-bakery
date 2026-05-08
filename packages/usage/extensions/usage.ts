@@ -1,5 +1,16 @@
-import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext, SessionShutdownEvent } from "@earendil-works/pi-coding-agent";
-import { closeUsageDatabase, collectSessionUsageSummary, upsertSessionUsageSummary } from "./usage-store.js";
+import type {
+	ExtensionAPI,
+	ExtensionCommandContext,
+	ExtensionContext,
+	SessionShutdownEvent,
+} from "@earendil-works/pi-coding-agent";
+import { getUsageViewPrefsDefaults } from "./usage-aggregation.js";
+import { UsageDashboard } from "./usage-dashboard.js";
+import {
+	closeUsageDatabase,
+	collectSessionUsageSummary,
+	upsertSessionUsageSummary,
+} from "./usage-store.js";
 
 function persistUsage(
 	ctx: ExtensionContext,
@@ -12,6 +23,15 @@ function persistUsage(
 }
 
 export default function (pi: ExtensionAPI) {
+	pi.registerCommand("usage", {
+		description: "Open the global usage dashboard",
+		handler: async (_args, ctx: ExtensionCommandContext) => {
+			await ctx.waitForIdle();
+			const dashboard = new UsageDashboard(getUsageViewPrefsDefaults());
+			return ctx.ui.custom(() => dashboard, { overlay: true });
+		},
+	});
+
 	pi.registerCommand("usage-flush", {
 		description: "Flush the current session usage summary to SQLite",
 		handler: async (_args, ctx: ExtensionCommandContext) => {

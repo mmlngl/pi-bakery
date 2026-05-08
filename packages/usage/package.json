@@ -13,7 +13,7 @@
 	},
 	"pi": {
 		"extensions": [
-			"./extensions"
+			"./extensions/usage.ts"
 		]
 	},
 	"peerDependencies": {
