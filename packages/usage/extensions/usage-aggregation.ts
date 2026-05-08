@@ -33,6 +33,16 @@ export interface UsagePunchBucket {
 	totals: UsageTotals;
 }
 
+export interface UsageBucketSession {
+	sessionId: string;
+	sessionName: string | null;
+	sessionStartedAt: string;
+	sessionEndedAt: string;
+	provider: string | null;
+	modelId: string | null;
+	totals: UsageTotals;
+}
+
 export type UsageChartStyle = "punch" | "line" | "bar";
 export type UsageBreakdownMode = "total" | "input" | "output" | "cache" | "cost";
 
@@ -82,6 +92,21 @@ function toIso(value: Date): string {
 function sumOrZero(row: Record<string, unknown>, key: string): number {
 	const value = row[key];
 	return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function mapTotals(row: Record<string, unknown>): UsageTotals {
+	return {
+		inputTokens: sumOrZero(row, "input_tokens"),
+		outputTokens: sumOrZero(row, "output_tokens"),
+		cacheReadTokens: sumOrZero(row, "cache_read_tokens"),
+		cacheWriteTokens: sumOrZero(row, "cache_write_tokens"),
+		totalTokens: sumOrZero(row, "total_tokens"),
+		costInput: sumOrZero(row, "cost_input"),
+		costOutput: sumOrZero(row, "cost_output"),
+		costCacheRead: sumOrZero(row, "cost_cache_read"),
+		costCacheWrite: sumOrZero(row, "cost_cache_write"),
+		costTotal: sumOrZero(row, "cost_total"),
+	};
 }
 
 function dayKey(date: Date): string {
@@ -184,18 +209,7 @@ export function getUsageOverview(range: UsageRange, now = new Date()): UsageOver
 			windowStart: window.start ? toIso(window.start) : null,
 			windowEnd: end,
 			sessionCount: Number(row?.session_count ?? 0),
-			totals: {
-				inputTokens: sumOrZero(row ?? {}, "input_tokens"),
-				outputTokens: sumOrZero(row ?? {}, "output_tokens"),
-				cacheReadTokens: sumOrZero(row ?? {}, "cache_read_tokens"),
-				cacheWriteTokens: sumOrZero(row ?? {}, "cache_write_tokens"),
-				totalTokens: sumOrZero(row ?? {}, "total_tokens"),
-				costInput: sumOrZero(row ?? {}, "cost_input"),
-				costOutput: sumOrZero(row ?? {}, "cost_output"),
-				costCacheRead: sumOrZero(row ?? {}, "cost_cache_read"),
-				costCacheWrite: sumOrZero(row ?? {}, "cost_cache_write"),
-				costTotal: sumOrZero(row ?? {}, "cost_total"),
-			},
+			totals: mapTotals(row ?? {}),
 		};
 	} finally {
 		db.close();
@@ -260,20 +274,56 @@ export function getRollingWeekPunchBuckets(now = new Date()): UsagePunchBucket[]
 				date: bucket.date,
 				label: bucket.label,
 				sessionCount: Number(row.session_count ?? 0),
-				totals: {
-					inputTokens: sumOrZero(row, "input_tokens"),
-					outputTokens: sumOrZero(row, "output_tokens"),
-					cacheReadTokens: sumOrZero(row, "cache_read_tokens"),
-					cacheWriteTokens: sumOrZero(row, "cache_write_tokens"),
-					totalTokens: sumOrZero(row, "total_tokens"),
-					costInput: sumOrZero(row, "cost_input"),
-					costOutput: sumOrZero(row, "cost_output"),
-					costCacheRead: sumOrZero(row, "cost_cache_read"),
-					costCacheWrite: sumOrZero(row, "cost_cache_write"),
-					costTotal: sumOrZero(row, "cost_total"),
-				},
+				totals: mapTotals(row),
 			};
 		});
+	} finally {
+		db.close();
+	}
+}
+
+export function getUsageBucketSessions(bucketDate: string): UsageBucketSession[] {
+	const dbPath = getUsageDatabasePath();
+	if (!existsSync(dbPath)) return [];
+
+	const db = new DatabaseSync(dbPath, { readOnly: true });
+	try {
+		const rows = db
+			.prepare(
+				`
+				SELECT
+					session_id,
+					session_name,
+					session_started_at,
+					session_ended_at,
+					provider,
+					model_id,
+					input_tokens,
+					output_tokens,
+					cache_read_tokens,
+					cache_write_tokens,
+					total_tokens,
+					cost_input,
+					cost_output,
+					cost_cache_read,
+					cost_cache_write,
+					cost_total
+				FROM session_usage_summary
+				WHERE substr(session_ended_at, 1, 10) = ?
+				ORDER BY total_tokens DESC, session_ended_at DESC, session_id ASC
+				`,
+			)
+			.all(bucketDate) as Array<Record<string, unknown>>;
+
+		return rows.map((row) => ({
+			sessionId: String(row.session_id ?? ""),
+			sessionName: row.session_name == null ? null : String(row.session_name),
+			sessionStartedAt: String(row.session_started_at ?? ""),
+			sessionEndedAt: String(row.session_ended_at ?? ""),
+			provider: row.provider == null ? null : String(row.provider),
+			modelId: row.model_id == null ? null : String(row.model_id),
+			totals: mapTotals(row),
+		}));
 	} finally {
 		db.close();
 	}

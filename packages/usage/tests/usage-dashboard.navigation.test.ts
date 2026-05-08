@@ -25,4 +25,27 @@ describe("UsageDashboard keyboard navigation", () => {
 
 		expect(onClose).toHaveBeenCalledTimes(2);
 	});
+
+	it("returns from drill-down before closing the dashboard", () => {
+		const onClose = vi.fn();
+		const dashboard = new UsageDashboard(getUsageViewPrefsDefaults(), onClose);
+
+		for (let index = 0; index < 6; index += 1) {
+			dashboard.handleInput("right");
+		}
+		dashboard.handleInput("enter");
+
+		const detail = dashboard.render(120).join("\n");
+		expect(detail).toContain("Bucket ");
+
+		dashboard.handleInput("escape");
+		expect(onClose).not.toHaveBeenCalled();
+
+		const overview = dashboard.render(120).join("\n");
+		expect(overview).not.toContain("Bucket ");
+		expect(overview).toContain("·");
+
+		dashboard.handleInput("escape");
+		expect(onClose).toHaveBeenCalledTimes(1);
+	});
 });
