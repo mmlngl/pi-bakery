@@ -47,7 +47,7 @@ describe("/usage dashboard command", () => {
 		} as any);
 
 		expect(custom).toHaveBeenCalledTimes(1);
-		expect(custom.mock.calls[0]?.[1]).toMatchObject({ overlay: true });
+		expect(custom.mock.calls[0]?.[1]).toBeUndefined();
 
 		capturedDashboard.handleInput("escape");
 		expect(done).toHaveBeenCalledTimes(1);
@@ -99,6 +99,6 @@ describe("/usage dashboard command", () => {
 
 		await Promise.resolve();
 		expect(custom).toHaveBeenCalledTimes(2);
-		expect(custom.mock.calls[1]?.[1]).toMatchObject({ overlay: true });
+		expect(custom.mock.calls[1]?.[1]).toBeUndefined();
 	});
 });

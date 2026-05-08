@@ -26,12 +26,7 @@ export default function (pi: ExtensionAPI) {
 	pi.registerCommand("usage", {
 		description: "Open the global usage dashboard",
 		handler: async (_args, ctx: ExtensionCommandContext) => {
-			return ctx.ui.custom(
-				(_tui, _theme, _keybindings, done) => new UsageDashboard(loadUsageViewPrefs(), done),
-				{
-					overlay: true,
-				},
-			);
+			return ctx.ui.custom((_tui, _theme, _keybindings, done) => new UsageDashboard(loadUsageViewPrefs(), done));
 		},
 	});
 
