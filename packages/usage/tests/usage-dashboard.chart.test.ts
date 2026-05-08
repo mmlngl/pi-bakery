@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { closeUsageDatabase, configureUsageStorageForTests, resetUsageStorageForTests, upsertSessionUsageSummary } from "../extensions/usage-store";
 import { UsageDashboard } from "../extensions/usage-dashboard";
-import { getUsageViewPrefsDefaults } from "../extensions/usage-aggregation";
+import { getUsageViewPrefsDefaults, loadUsageViewPrefs } from "../extensions/usage-aggregation";
 import type { SessionUsageSummary } from "../extensions/usage-store";
 
 function summary(sessionId: string, endedAt: string, tokens: number): SessionUsageSummary {
@@ -65,5 +65,23 @@ describe("UsageDashboard punch chart", () => {
 
 		expect(output).toContain("░");
 		expect(output).toContain("▓");
+	});
+
+	it("switches chart style with the keyboard and restores it on reopen", () => {
+		const root = mkdtempSync(join(tmpdir(), "pi-usage-chart-"));
+		tempRoots.push(root);
+		configureUsageStorageForTests({ appDir: root, databasePath: join(root, "usage.sqlite3") });
+
+		const dashboard = new UsageDashboard(getUsageViewPrefsDefaults());
+		const before = dashboard.render(120).join("\n");
+
+		dashboard.handleInput("l");
+		const after = dashboard.render(120).join("\n");
+
+		expect(after).not.toEqual(before);
+		expect(after).toContain("Mode: line");
+
+		const reopened = new UsageDashboard(loadUsageViewPrefs());
+		expect(reopened.render(120).join("\n")).toContain("Mode: line");
 	});
 });

@@ -4,9 +4,16 @@ import {
 	getUsageBucketSessions,
 	getUsageOverview,
 	saveUsageViewPrefs,
+	type UsageChartStyle,
 	type UsagePunchBucket,
 	type UsageViewPrefs,
 } from "./usage-aggregation.js";
+
+const CHART_STYLE_KEYS: Record<string, UsageChartStyle> = {
+	p: "punch",
+	l: "line",
+	b: "bar",
+};
 
 export class UsageDashboard extends Container {
 	private prefs: UsageViewPrefs;
@@ -14,12 +21,15 @@ export class UsageDashboard extends Container {
 	private overview = getUsageOverview("week");
 	private selectedIndex = 0;
 	private detailOpen = false;
+	private chartStyle: UsageChartStyle;
 	private onClose?: () => void;
 
 	constructor(prefs: UsageViewPrefs, onClose?: () => void) {
 		super();
 		this.prefs = prefs;
 		this.onClose = onClose;
+		this.chartStyle = this.normalizeChartStyle(prefs.chartStyle);
+		this.prefs.chartStyle = this.chartStyle;
 		this.buckets = getRollingWeekPunchBuckets();
 		this.selectedIndex = this.bucketIndexForDate(this.prefs.selectedBucket);
 		this.rebuild();
@@ -41,6 +51,12 @@ export class UsageDashboard extends Container {
 			this.detailOpen = true;
 			this.persistSelectedBucket();
 			this.rebuild();
+			return;
+		}
+
+		const chartStyle = CHART_STYLE_KEYS[data];
+		if (chartStyle) {
+			this.setChartStyle(chartStyle);
 			return;
 		}
 
@@ -68,6 +84,20 @@ export class UsageDashboard extends Container {
 		}
 	}
 
+	private normalizeChartStyle(value: UsageChartStyle | string | undefined): UsageChartStyle {
+		if (value === "line" || value === "bar") return value;
+		return "punch";
+	}
+
+	private setChartStyle(chartStyle: UsageChartStyle): void {
+		if (this.chartStyle === chartStyle) return;
+
+		this.chartStyle = chartStyle;
+		this.prefs.chartStyle = chartStyle;
+		saveUsageViewPrefs(this.prefs);
+		this.rebuild();
+	}
+
 	private bucketIndexForDate(date: string | null): number {
 		if (!date) return 0;
 		const index = this.buckets.findIndex((bucket) => bucket.date === date);
@@ -85,6 +115,34 @@ export class UsageDashboard extends Container {
 		if (totalTokens < 100) return "▒";
 		if (totalTokens < 500) return "▓";
 		return "█";
+	}
+
+	private lineGlyph(totalTokens: number): string {
+		if (totalTokens <= 0) return "·";
+		if (totalTokens < 25) return "╴";
+		if (totalTokens < 100) return "─";
+		if (totalTokens < 500) return "┄";
+		return "━";
+	}
+
+	private barGlyph(totalTokens: number): string {
+		if (totalTokens <= 0) return "·";
+		if (totalTokens < 25) return "▁";
+		if (totalTokens < 100) return "▃";
+		if (totalTokens < 500) return "▆";
+		return "█";
+	}
+
+	private chartGlyph(totalTokens: number): string {
+		switch (this.chartStyle) {
+			case "line":
+				return this.lineGlyph(totalTokens);
+			case "bar":
+				return this.barGlyph(totalTokens);
+			case "punch":
+			default:
+				return this.punchGlyph(totalTokens);
+		}
 	}
 
 	private formatTimeRange(start: string, end: string): string {
@@ -118,11 +176,11 @@ export class UsageDashboard extends Container {
 	private buildOverviewLines(): string[] {
 		return [
 			"Usage",
-			`Tokens: ${this.overview.totals.totalTokens.toLocaleString()} | Sessions: ${this.overview.sessionCount}`,
+			`Mode: ${this.chartStyle} | Tokens: ${this.overview.totals.totalTokens.toLocaleString()} | Sessions: ${this.overview.sessionCount}`,
 			this.buckets
 				.map(
 					(bucket, index) =>
-						`${index === this.selectedIndex ? ">" : " "}${this.punchGlyph(bucket.totals.totalTokens)} ${bucket.label}`,
+						`${index === this.selectedIndex ? ">" : " "}${this.chartGlyph(bucket.totals.totalTokens)} ${bucket.label}`,
 				)
 				.join("  "),
 		];
@@ -135,7 +193,7 @@ export class UsageDashboard extends Container {
 
 		return [
 			"Usage",
-			`Tokens: ${this.overview.totals.totalTokens.toLocaleString()} | Sessions: ${this.overview.sessionCount}`,
+			`Mode: ${this.chartStyle} | Tokens: ${this.overview.totals.totalTokens.toLocaleString()} | Sessions: ${this.overview.sessionCount}`,
 			`Bucket ${bucket.date} | Sessions: ${bucket.sessionCount} | Total tokens: ${bucketTotals.totalTokens.toLocaleString()} | Input: ${bucketTotals.inputTokens.toLocaleString()} | Output: ${bucketTotals.outputTokens.toLocaleString()} | Cache: ${bucketTotals.cacheReadTokens.toLocaleString()}/${bucketTotals.cacheWriteTokens.toLocaleString()} | Cost: $${this.formatMoney(bucketTotals.costTotal)}`,
 			"Press Esc to return",
 			"",
