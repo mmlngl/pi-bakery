@@ -1,3 +1,7 @@
 {
-	"packages": ["../packages/ui-tweaks", "../packages/usage"]
+	"packages": [
+		"../packages/effect-playground",
+		"../packages/ui-tweaks",
+		"../packages/usage"
+	]
 }

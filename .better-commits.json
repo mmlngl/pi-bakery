@@ -71,6 +71,10 @@
 		"initial_value": "usage",
 		"options": [
 			{
+				"value": "effect-playground",
+				"label": "effect-playground"
+			},
+			{
 				"value": "ui-tweaks",
 				"label": "ui-tweaks"
 			},
