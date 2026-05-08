@@ -27,8 +27,12 @@ export default function (pi: ExtensionAPI) {
 		description: "Open the global usage dashboard",
 		handler: async (_args, ctx: ExtensionCommandContext) => {
 			await ctx.waitForIdle();
-			const dashboard = new UsageDashboard(getUsageViewPrefsDefaults());
-			return ctx.ui.custom(() => dashboard, { overlay: true });
+			return ctx.ui.custom(
+				(_tui, _theme, _keybindings, done) => new UsageDashboard(getUsageViewPrefsDefaults(), done),
+				{
+					overlay: true,
+				},
+			);
 		},
 	});
 

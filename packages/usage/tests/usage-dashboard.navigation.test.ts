@@ -15,4 +15,14 @@ describe("UsageDashboard keyboard navigation", () => {
 		expect(after).not.toEqual(before);
 		expect(after).toContain(">");
 	});
+
+	it("closes on escape or ctrl+c", () => {
+		const onClose = vi.fn();
+		const dashboard = new UsageDashboard(getUsageViewPrefsDefaults(), onClose);
+
+		dashboard.handleInput("escape");
+		dashboard.handleInput("ctrl+c");
+
+		expect(onClose).toHaveBeenCalledTimes(2);
+	});
 });

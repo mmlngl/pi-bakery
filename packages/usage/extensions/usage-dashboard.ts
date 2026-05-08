@@ -11,15 +11,22 @@ export class UsageDashboard extends Container {
 	private buckets: UsagePunchBucket[];
 	private overview = getUsageOverview("week");
 	private selectedIndex = 0;
+	private onClose?: () => void;
 
-	constructor(prefs: UsageViewPrefs) {
+	constructor(prefs: UsageViewPrefs, onClose?: () => void) {
 		super();
 		this.prefs = prefs;
+		this.onClose = onClose;
 		this.buckets = getRollingWeekPunchBuckets();
 		this.rebuild();
 	}
 
 	handleInput(data: string): void {
+		if (matchesKey(data, Key.escape) || matchesKey(data, Key.ctrl("c")) || data === "escape" || data === "ctrl+c") {
+			this.onClose?.();
+			return;
+		}
+
 		if (
 			matchesKey(data, Key.left) ||
 			matchesKey(data, Key.up) ||
