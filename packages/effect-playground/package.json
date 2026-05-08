@@ -30,6 +30,7 @@
 		"vitest": "^4.1.5"
 	},
 	"dependencies": {
-		"effect": "^3.21.2"
+		"@effect/platform-node": "4.0.0-beta.64",
+		"effect": "4.0.0-beta.64"
 	}
 }
